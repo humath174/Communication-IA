@@ -1,0 +1,60 @@
+
+
+<?php
+global $conn;
+try {
+    // Connexion à la base de données
+    $servername = "10.20.90.11";
+    $username = "grafana";
+    $password = "grafana";
+    $dbname = "botscommunication";
+
+
+
+    // Préparer et exécuter la requête SQL pour récupérer les prompts
+    $stmt = $conn->prepare("SELECT * FROM Prompt_Email");
+    $stmt->execute();
+
+    // Récupérer tous les résultats
+    $prompts = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+} catch (PDOException $e) {
+    // Si une erreur survient lors de la récupération des données
+    echo "Erreur : " . $e->getMessage();
+    exit;  // Arrêter l'exécution du script
+}
+?>
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Prompts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<?php
+include "/frontia/components/navbar.php";
+?>
+<h1>Gestion des Prompts</h1>
+<a href="add_prompt.php">Ajouter un nouveau prompt</a>
+<table>
+    <tr>
+        <th>Email</th>
+        <th>Prompt</th>
+        <th>Actions</th>
+    </tr>
+    <?php foreach ($prompts as $prompt): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($prompt['email']); ?></td>
+            <td><?php echo htmlspecialchars($prompt['prompt']); ?></td>
+            <td>
+                <a href="edit_prompt.php?id=<?php echo $prompt['id']; ?>">Éditer</a> |
+                <a href="delete_prompt.php?id=<?php echo $prompt['id']; ?>">Supprimer</a>
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</table>
+</body>
+</html>
