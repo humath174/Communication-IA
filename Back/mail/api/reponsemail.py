@@ -6,13 +6,12 @@ from email.mime.multipart import MIMEMultipart
 import time
 import os
 
-
 # Configuration de l'API OpenAI
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Configuration de la base de données
 DB_CONFIG = {
-    "host": "192.168.1.24",
+    "host": "192.168.1.200",
     "user": "grafana",
     "password": "grafana",
     "database": "botscommunication"
@@ -69,29 +68,28 @@ def generate_reply_with_chatgpt(prompt, email_subject, email_message):
         print(f"Erreur avec l'API OpenAI : {e}")
         return "Je n'ai pas pu générer une réponse pour le moment."
 
-def send_email(to, subject, message):
-    """Envoie l'e-mail de réponse générée."""
+def save_reply_to_database(conn, email_id, email_to, email_from, email_subject, email_message, reply, company_id):
+    """
+    Sauvegarde la réponse générée dans la nouvelle table `responses`.
+    """
+    cursor = conn.cursor()
     try:
-        msg = MIMEMultipart()
-        msg["From"] = EMAIL_ACCOUNT
-        msg["To"] = to
-        msg["Subject"] = "Re: " + subject
-
-        body = MIMEText(message, "plain")
-        msg.attach(body)
-
-        # Connexion au serveur SMTP et envoi de l'email
-        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
-            server.starttls()
-            server.login(EMAIL_ACCOUNT, PASSWORD)
-            server.sendmail(EMAIL_ACCOUNT, to, msg.as_string())
-            print(f"Réponse envoyée à {to}")
-    except Exception as e:
-        print(f"Erreur lors de l'envoi de l'e-mail : {e}")
+        query = """
+        INSERT INTO responses (email_id, email_to, email_from, subject, original_message, reply_message, company_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (email_id, email_to, email_from, email_subject, email_message, reply, company_id))
+        conn.commit()
+        print(f"Réponse sauvegardée pour l'e-mail ID {email_id}.")
+    except mysql.connector.Error as err:
+        print(f"Erreur lors de la sauvegarde de la réponse : {err}")
+    finally:
+        cursor.close()
 
 def process_responses():
     """
     Traite les e-mails dans la base de données et génère des réponses avec ChatGPT.
+    Les réponses sont stockées dans la nouvelle table `responses`.
     """
     conn = connect_to_database()
     if not conn:
@@ -101,7 +99,7 @@ def process_responses():
 
     try:
         # Récupérer les e-mails non encore traités
-        cursor.execute("SELECT * FROM bdd_reponse WHERE id NOT IN (SELECT email_id FROM actions_reponse);")
+        cursor.execute("SELECT * FROM bdd_reponse WHERE id NOT IN (SELECT email_id FROM responses);")
         emails = cursor.fetchall()
 
         for email in emails:
@@ -110,6 +108,7 @@ def process_responses():
             email_from = email["from"]
             email_subject = email["subject"]
             email_message = email["message"]
+            company_id = email["company_id"]  # Supposons que cette colonne existe dans `bdd_reponse`
 
             # Récupérer le prompt spécifique au destinataire
             prompt = get_prompt_for_email(conn, email_to)
@@ -120,11 +119,8 @@ def process_responses():
             # Générer la réponse avec ChatGPT
             reply = generate_reply_with_chatgpt(prompt, email_subject, email_message)
 
-            # Sauvegarder la réponse dans la base de données
-            save_reply_to_database(conn, email_id, email_to, email_from, email_subject, email_message, reply)
-
-            # Envoyer la réponse par e-mail
-            send_email(email_from, email_subject, reply)
+            # Sauvegarder la réponse dans la nouvelle table `responses`
+            save_reply_to_database(conn, email_id, email_to, email_from, email_subject, email_message, reply, company_id)
 
     except mysql.connector.Error as err:
         print(f"Erreur lors du traitement des réponses : {err}")
@@ -132,25 +128,7 @@ def process_responses():
         cursor.close()
         conn.close()
 
-def save_reply_to_database(conn, email_id, email_to, email_from, email_subject, email_message, reply):
-    """
-    Sauvegarde la réponse générée dans une table de suivi des actions.
-    """
-    cursor = conn.cursor()
-    try:
-        query = """
-        INSERT INTO actions_reponse (email_id, email_to, email_from, subject, original_message, reply_message, action_timestamp)
-        VALUES (%s, %s, %s, %s, %s, %s, NOW())
-        """
-        cursor.execute(query, (email_id, email_to, email_from, email_subject, email_message, reply))
-        conn.commit()
-        print(f"Réponse sauvegardée pour l'e-mail ID {email_id}.")
-    except mysql.connector.Error as err:
-        print(f"Erreur lors de la sauvegarde de la réponse : {err}")
-    finally:
-        cursor.close()
-
 if __name__ == "__main__":
     while True:
         process_responses()
-        time.sleep(1)  # Attendre 5 secondes avant de vérifier à nouveau
+        time.sleep(1)  # Attendre 1 seconde avant de vérifier à nouveau
