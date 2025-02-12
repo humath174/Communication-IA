@@ -39,7 +39,7 @@ Un site web innovant qui utilise l'intelligence artificielle pour automatiser la
 Nous adorons les contributions ! Voici comment vous pouvez aider :
 
 ### 1. Signaler un bug
-- Vérifiez si le bug a déjà été signalé dans les [issues](https://github.com/votre-utilisateur/votre-projet/issues).
+- Vérifiez si le bug a déjà été signalé dans les [issues](https://github.com/humath174/Communication-IA/issues).
 - Si ce n'est pas le cas, ouvrez une nouvelle issue en décrivant le problème.
 
 ### 2. Proposer une amélioration
