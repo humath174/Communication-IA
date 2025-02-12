@@ -5,6 +5,9 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import time
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configuration de l'API OpenAI
 openai.api_key = os.getenv("OPENAI_API_KEY")

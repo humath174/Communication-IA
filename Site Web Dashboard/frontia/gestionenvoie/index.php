@@ -35,17 +35,7 @@ if (!$user) {
 
 $company_id = $user['company_id'];
 
-// Récupération des emails de la société dans la table Prompt_Email avec le même company_id
-$requeteEmails = $connexion->prepare("
-    SELECT id, email, prompt 
-    FROM Prompt_Email 
-    WHERE company_id = :company_id
-    ORDER BY id DESC
-");
-$requeteEmails->execute(['company_id' => $company_id]);
-$emails = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
-
-// Récupération des réponses non envoyées
+// Récupération des emails en attente de réponse
 $requeteReponses = $connexion->prepare("
     SELECT id, email_to, email_from, subject, original_message, reply_message, action_timestamp 
     FROM responses 
@@ -70,7 +60,6 @@ if (isset($_GET['reponse_id'])) {
 
 // Traitement de l'envoi de la réponse
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
-    var_dump($_POST); // Vérification des données POST
     $reponseId = $_POST['reponse_id'];
     $replyMessage = $_POST['reply_message'];
 
@@ -88,19 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
         SET reply_message = :reply_message, sent = 1
         WHERE id = :reponse_id AND company_id = :company_id
     ");
-
-    if ($requeteUpdate->execute(['reply_message' => $replyMessage, 'reponse_id' => $reponseId, 'company_id' => $company_id])) {
-        echo "<script>alert('Réponse mise à jour avec succès.');</script>";
-
-        // Vérifier si la mise à jour a été appliquée
-        $checkUpdate = $connexion->prepare("SELECT reply_message, sent FROM responses WHERE id = :reponse_id AND company_id = :company_id");
-        $checkUpdate->execute(['reponse_id' => $reponseId, 'company_id' => $company_id]);
-        $updatedData = $checkUpdate->fetch(PDO::FETCH_ASSOC);
-        var_dump($updatedData);
-    } else {
-        var_dump($requeteUpdate->errorInfo());
-        echo "<script>alert('Erreur lors de la mise à jour de la réponse.');</script>";
-    }
+    $requeteUpdate->execute(['reply_message' => $replyMessage, 'reponse_id' => $reponseId, 'company_id' => $company_id]);
 
     // Envoyer l'email
     $requeteEmail = $connexion->prepare("
@@ -117,12 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
         $message = $emailData['reply_message'];
         $headers = "From: ai@digitalweb-dynamics.com";
 
-        if (mail($to, $subject, $message, $headers)) {
-            echo "<script>alert('Email envoyé avec succès.');</script>";
-        } else {
-            echo "<script>alert('Erreur lors de l\'envoi de l\'email.');</script>";
-        }
+        mail($to, $subject, $message, $headers);
     }
+
+    // Redirection pour éviter le rechargement du formulaire
+    header("Location: index.php");
+    exit();
 }
 ?>
 
@@ -133,31 +110,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Réponses Suggérées</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0HXKBBMW06"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-0HXKBBMW06');
-    </script>
-
+    <link rel="icon" href="img.png" type="image/x-icon">
 </head>
 <body class="font-sans bg-gray-50">
-<nav class="bg-white shadow-md">
-    <div class="max-w-screen-xl mx-auto p-4 flex justify-between items-center">
-        <a href="/" class="text-xl font-semibold text-blue-600">Mon Application</a>
-        <ul class="flex space-x-6 text-gray-600">
-            <li><a href="/index.php">Dashboard</a></li>
-            <li><a href="/boitemail/index.php">Email</a></li>
-            <li><a href="/prompt/index.php">Prompt</a></li>
-            <li><a href="/activité/index.php" class="text-blue-600">Activité</a></li>
-            <li><a href="#">Contact</a></li>
-        </ul>
-    </div>
-</nav>
+<?php
+
+include "navbar.php";
+
+?>
 
 <div class="flex h-screen">
     <div class="w-1/4 bg-gray-100 p-4 overflow-y-auto">

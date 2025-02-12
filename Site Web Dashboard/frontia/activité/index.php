@@ -79,18 +79,11 @@ $actions = $requeteActions->fetchAll(PDO::FETCH_ASSOC);
 
 </head>
 <body class="bg-gray-100 font-sans antialiased">
-<nav class="bg-white shadow-md">
-    <div class="max-w-screen-xl mx-auto p-4 flex justify-between items-center">
-        <a href="/" class="text-xl font-semibold text-blue-600">Mon Application</a>
-        <ul class="flex space-x-6 text-gray-600">
-            <li><a href="/index.php" >Dashboard</a></li>
-            <li><a href="/boitemail/index.php" >Email</a></li>
-            <li><a href="/prompt/index.php" class="text-blue-600">Prompt</a></li>
-            <li><a href="/gestionenvoie/afficheetenvoie.php" >Envoie Mail</a></li>
-            <li><a href="/activité/index.php">Activité</a></li>
-        </ul>
-    </div>
-</nav>
+<?php
+
+include "navbar.php";
+
+?>
 
 <div class="container mx-auto px-6 py-12">
     <div class="bg-white shadow-lg rounded-lg p-8">

@@ -1,5 +1,5 @@
 <?php
-session_start(); // Démarre la session pour récupérer l'utilisateur connecté
+session_start();
 
 // Connexion à la base de données MySQL
 $serveur = "192.168.1.200";
@@ -43,8 +43,16 @@ $requeteEmails = $connexion->prepare("
 ");
 $requeteEmails->execute([$company_id]);
 
-
 $donnees = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
+
+// Récupération des prompts liés à cette entreprise
+$requetePrompts = $connexion->prepare("
+    SELECT id, email, prompt 
+    FROM Prompt_Email 
+    WHERE company_id = ?
+");
+$requetePrompts->execute([$company_id]);
+$prompts = $requetePrompts->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -52,41 +60,19 @@ $donnees = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestion des E-mails</title>
+    <title>Gestion des E-mails et des Prompts</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Icônes Font Awesome pour les indicateurs -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0HXKBBMW06"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'G-0HXKBBMW06');
-    </script>
-
 </head>
 <body class="bg-gray-100">
 
 <!-- Navigation -->
-<nav class="bg-white shadow-md">
-    <div class="max-w-screen-xl mx-auto p-4 flex justify-between items-center">
-        <a href="/" class="text-xl font-semibold text-blue-600">Mon Application</a>
-        <ul class="flex space-x-6 text-gray-600">
-            <li><a href="/index.php" >Dashboard</a></li>
-            <li><a href="/boitemail/index.php" class="text-blue-600">Email</a></li>
-            <li><a href="/prompt/index.php">Prompt</a></li>
-            <li><a href="/gestionenvoie/afficheetenvoie.php" >Envoie Mail</a></li>
-            <li><a href="/activité/index.php">Activité</a></li>
-        </ul>
-    </div>
-</nav>
+<?php include "navbar.php"; ?>
 
 <!-- Main Content -->
 <div class="container mx-auto p-6">
-    <h1 class="text-3xl font-semibold text-gray-800 mb-6">Gestion des E-mails de votre entreprise</h1>
+    <h1 class="text-3xl font-semibold text-gray-800 mb-6">Gestion des E-mails et des Prompts de votre entreprise</h1>
 
     <!-- Add New Email Button -->
     <div class="mb-4">
@@ -94,7 +80,7 @@ $donnees = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
     </div>
 
     <!-- Table of Emails -->
-    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg mb-8">
         <table class="min-w-full text-sm text-left text-gray-700">
             <thead class="bg-gray-200">
             <tr>
@@ -128,6 +114,40 @@ $donnees = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
             <?php endforeach; ?>
             </tbody>
         </table>
+    </div>
+
+    <!-- Add New Prompt Button -->
+    <div class="mb-4">
+        <a href="add_prompt.php" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ajouter un nouveau prompt</a>
+    </div>
+
+    <!-- Table of Prompts -->
+    <div class="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table class="min-w-full text-sm text-left text-gray-700">
+            <thead class="bg-gray-200">
+            <tr>
+                <th class="px-4 py-2">Email</th>
+                <th class="px-4 py-2">Prompt</th>
+                <th class="px-4 py-2">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <?php foreach ($prompts as $prompt): ?>
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="px-4 py-2"><?php echo htmlspecialchars($prompt['email']); ?></td>
+                    <td class="px-4 py-2"><?php echo htmlspecialchars($prompt['prompt']); ?></td>
+                    <td class="px-4 py-2 space-x-2">
+                        <a href="edit_prompt.php?id=<?php echo $prompt['id']; ?>" class="text-blue-600 hover:underline">Éditer</a> |
+                        <a href="delete_prompt.php?id=<?php echo $prompt['id']; ?>" class="text-red-600 hover:underline">Supprimer</a>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+
+        <?php if (empty($prompts)): ?>
+            <p class="text-gray-600 text-center p-4">Aucun prompt trouvé pour cette entreprise.</p>
+        <?php endif; ?>
     </div>
 </div>
 

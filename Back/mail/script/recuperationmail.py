@@ -6,6 +6,10 @@ from datetime import datetime
 import time
 import chardet
 import re
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 # Configuration de la base de données
 DB_CONFIG = {

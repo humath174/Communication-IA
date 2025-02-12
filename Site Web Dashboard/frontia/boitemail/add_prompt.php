@@ -69,7 +69,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<?php
 
+include "Component/navbar.php";
+
+?>
 <h1>Ajouter un Nouveau Prompt</h1>
 
 <form action="add_prompt.php" method="POST">

@@ -52,7 +52,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </head>
 <body>
 <?php
-include("frontia/ui/navbar.php");
+
+include "Component/navbar.php";
+
 ?>
 <h2>Modifier un Prompt</h2>
 <form method="POST">
