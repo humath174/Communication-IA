@@ -64,6 +64,13 @@ $prompts = $requetePrompts->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Icônes Font Awesome pour les indicateurs -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-0HXKBBMW06');
+    </script>
 </head>
 <body class="bg-gray-100">
 

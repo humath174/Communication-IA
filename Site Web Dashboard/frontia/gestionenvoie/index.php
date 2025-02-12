@@ -38,7 +38,7 @@ $company_id = $user['company_id'];
 // Récupération des emails en attente de réponse
 $requeteReponses = $connexion->prepare("
     SELECT id, email_to, email_from, subject, original_message, reply_message, action_timestamp 
-    FROM responses 
+    FROM validation_response 
     WHERE sent = 0 AND company_id = :company_id
     ORDER BY id DESC
 ");
@@ -51,7 +51,7 @@ if (isset($_GET['reponse_id'])) {
     $reponseId = htmlspecialchars($_GET['reponse_id']);
     $requeteDetails = $connexion->prepare("
         SELECT id, email_to, email_from, subject, original_message, reply_message, action_timestamp 
-        FROM responses 
+        FROM validation_response 
         WHERE id = :reponse_id AND company_id = :company_id
     ");
     $requeteDetails->execute(['reponse_id' => $reponseId, 'company_id' => $company_id]);
@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
     $replyMessage = $_POST['reply_message'];
 
     // Vérifier si l'ID de la réponse existe
-    $checkExistence = $connexion->prepare("SELECT id FROM responses WHERE id = :reponse_id AND company_id = :company_id");
+    $checkExistence = $connexion->prepare("SELECT id FROM validation_response WHERE id = :reponse_id AND company_id = :company_id");
     $checkExistence->execute(['reponse_id' => $reponseId, 'company_id' => $company_id]);
 
     if ($checkExistence->rowCount() === 0) {
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
 
     // Mettre à jour la réponse et marquer comme envoyée
     $requeteUpdate = $connexion->prepare("
-        UPDATE responses 
+        UPDATE validation_response 
         SET reply_message = :reply_message, sent = 1
         WHERE id = :reponse_id AND company_id = :company_id
     ");
@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
     // Envoyer l'email
     $requeteEmail = $connexion->prepare("
         SELECT email_from, subject, reply_message 
-        FROM responses 
+        FROM validation_response 
         WHERE id = :reponse_id AND company_id = :company_id
     ");
     $requeteEmail->execute(['reponse_id' => $reponseId, 'company_id' => $company_id]);
@@ -111,6 +111,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
     <title>Réponses Suggérées</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="icon" href="img.png" type="image/x-icon">
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-0HXKBBMW06');
+    </script>
 </head>
 <body class="font-sans bg-gray-50">
 <?php

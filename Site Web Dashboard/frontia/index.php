@@ -2,9 +2,13 @@
 session_start();
 require 'config.php'; // Connexion à la base de données
 
+// Vérifier si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
-    die("Vous devez être connecté pour voir cette page.");
+    // Rediriger vers la page de connexion
+    header("Location: login.php");
+    exit(); // Arrêter l'exécution du script après la redirection
 }
+
 
 $user_id = $_SESSION['user_id'];
 $email = $_SESSION['email'];
@@ -29,6 +33,13 @@ $logs = $conn->query($queryLogs);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Dashboard</title>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-0HXKBBMW06');
+    </script>
 </head>
 <body class="bg-gray-100">
 
