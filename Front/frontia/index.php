@@ -1,10 +1,9 @@
 <?php
 session_start();
 
-// Vérifie si l'utilisateur est connecté
+// Vérification si l'utilisateur est connecté
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php");
-    exit();
+    die("Vous devez être connecté pour voir cette page.");
 }
 
 // Récupérer les informations de l'utilisateur depuis la session
@@ -19,6 +18,17 @@ $nom = $_SESSION['full_name'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
     <title>Accueil</title>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0HXKBBMW06"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-0HXKBBMW06');
+    </script>
+
 </head>
 <body class="bg-gray-100">
 
@@ -28,13 +38,14 @@ $nom = $_SESSION['full_name'];
         <a href="/" class="text-xl font-semibold text-blue-600">Mon Application</a>
         <ul class="flex space-x-6 text-gray-600">
             <li><a href="/index.php" class="text-blue-600">Dashboard</a></li>
-            <li><a href="/boitemail/index.php" >Email</a></li>
+            <li><a href="/boitemail/index.php">Email</a></li>
             <li><a href="/prompt/index.php">Prompt</a></li>
+            <li><a href="/gestionenvoie/afficheetenvoie.php" >Envoie Mail</a></li>
             <li><a href="/activité/index.php">Activité</a></li>
-            <li><a href="#">Contact</a></li>
         </ul>
     </div>
 </nav>
+
 
 <!-- Main Content -->
 <div class="container mx-auto p-6">

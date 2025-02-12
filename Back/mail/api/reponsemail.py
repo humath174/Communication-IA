@@ -8,7 +8,6 @@ import os
 
 # Configuration de l'API OpenAI
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
 # Configuration de la base de données
 DB_CONFIG = {
     "host": "192.168.1.200",
@@ -44,6 +43,22 @@ def get_prompt_for_email(conn, email_to):
         return result["prompt"] if result else None
     except mysql.connector.Error as err:
         print(f"Erreur lors de la récupération du prompt : {err}")
+        return None
+    finally:
+        cursor.close()
+
+def get_company_id_for_email(conn, email_to):
+    """
+    Récupère le company_id basé sur l'email de destination dans la table Prompt_Email.
+    """
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = "SELECT company_id FROM Prompt_Email WHERE email = %s"
+        cursor.execute(query, (email_to,))
+        result = cursor.fetchone()
+        return result["company_id"] if result else None
+    except mysql.connector.Error as err:
+        print(f"Erreur lors de la récupération du company_id : {err}")
         return None
     finally:
         cursor.close()
@@ -108,12 +123,17 @@ def process_responses():
             email_from = email["from"]
             email_subject = email["subject"]
             email_message = email["message"]
-            company_id = email["company_id"]  # Supposons que cette colonne existe dans `bdd_reponse`
 
             # Récupérer le prompt spécifique au destinataire
             prompt = get_prompt_for_email(conn, email_to)
             if not prompt:
                 print(f"Aucun prompt trouvé pour l'adresse {email_to}.")
+                continue
+
+            # Récupérer le company_id en fonction de l'email_to depuis la table Prompt_Email
+            company_id = get_company_id_for_email(conn, email_to)
+            if not company_id:
+                print(f"Aucun company_id trouvé pour l'email_to {email_to}. Réponse non sauvegardée.")
                 continue
 
             # Générer la réponse avec ChatGPT

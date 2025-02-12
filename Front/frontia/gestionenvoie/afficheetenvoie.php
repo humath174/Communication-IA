@@ -1,6 +1,11 @@
 <?php
 session_start(); // Démarre la session pour récupérer l'utilisateur connecté
 
+// Activer l'affichage des erreurs
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Connexion à la base de données MySQL
 $serveur = "192.168.1.200";
 $utilisateur = "grafana";
@@ -28,16 +33,26 @@ if (!$user) {
     die("Utilisateur non trouvé.");
 }
 
-$company_id = $user['company_id']; // ID de l'entreprise associée
+$company_id = $user['company_id'];
+
+// Récupération des emails de la société dans la table Prompt_Email avec le même company_id
+$requeteEmails = $connexion->prepare("
+    SELECT id, email, prompt 
+    FROM Prompt_Email 
+    WHERE company_id = :company_id
+    ORDER BY id DESC
+");
+$requeteEmails->execute(['company_id' => $company_id]);
+$emails = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
 
 // Récupération des réponses non envoyées
 $requeteReponses = $connexion->prepare("
     SELECT id, email_to, email_from, subject, original_message, reply_message, action_timestamp 
     FROM responses 
-    WHERE sent = 0 AND company_id = ?
+    WHERE sent = 0 AND company_id = :company_id
     ORDER BY id DESC
 ");
-$requeteReponses->execute([$company_id]);
+$requeteReponses->execute(['company_id' => $company_id]);
 $reponses = $requeteReponses->fetchAll(PDO::FETCH_ASSOC);
 
 // Récupération des détails d'une réponse spécifique si un ID est passé en paramètre
@@ -45,34 +60,55 @@ $reponseDetails = null;
 if (isset($_GET['reponse_id'])) {
     $reponseId = htmlspecialchars($_GET['reponse_id']);
     $requeteDetails = $connexion->prepare("
-        SELECT email_to, email_from, subject, original_message, reply_message, action_timestamp 
+        SELECT id, email_to, email_from, subject, original_message, reply_message, action_timestamp 
         FROM responses 
-        WHERE id = ? AND company_id = ?
+        WHERE id = :reponse_id AND company_id = :company_id
     ");
-    $requeteDetails->execute([$reponseId, $company_id]);
+    $requeteDetails->execute(['reponse_id' => $reponseId, 'company_id' => $company_id]);
     $reponseDetails = $requeteDetails->fetch(PDO::FETCH_ASSOC);
 }
 
 // Traitement de l'envoi de la réponse
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
+    var_dump($_POST); // Vérification des données POST
     $reponseId = $_POST['reponse_id'];
     $replyMessage = $_POST['reply_message'];
+
+    // Vérifier si l'ID de la réponse existe
+    $checkExistence = $connexion->prepare("SELECT id FROM responses WHERE id = :reponse_id AND company_id = :company_id");
+    $checkExistence->execute(['reponse_id' => $reponseId, 'company_id' => $company_id]);
+
+    if ($checkExistence->rowCount() === 0) {
+        die("Erreur : L'ID de la réponse n'existe pas.");
+    }
 
     // Mettre à jour la réponse et marquer comme envoyée
     $requeteUpdate = $connexion->prepare("
         UPDATE responses 
-        SET reply_message = ?, sent = 1 
-        WHERE id = ?
+        SET reply_message = :reply_message, sent = 1
+        WHERE id = :reponse_id AND company_id = :company_id
     ");
-    $requeteUpdate->execute([$replyMessage, $reponseId]);
+
+    if ($requeteUpdate->execute(['reply_message' => $replyMessage, 'reponse_id' => $reponseId, 'company_id' => $company_id])) {
+        echo "<script>alert('Réponse mise à jour avec succès.');</script>";
+
+        // Vérifier si la mise à jour a été appliquée
+        $checkUpdate = $connexion->prepare("SELECT reply_message, sent FROM responses WHERE id = :reponse_id AND company_id = :company_id");
+        $checkUpdate->execute(['reponse_id' => $reponseId, 'company_id' => $company_id]);
+        $updatedData = $checkUpdate->fetch(PDO::FETCH_ASSOC);
+        var_dump($updatedData);
+    } else {
+        var_dump($requeteUpdate->errorInfo());
+        echo "<script>alert('Erreur lors de la mise à jour de la réponse.');</script>";
+    }
 
     // Envoyer l'email
     $requeteEmail = $connexion->prepare("
         SELECT email_from, subject, reply_message 
         FROM responses 
-        WHERE id = ?
+        WHERE id = :reponse_id AND company_id = :company_id
     ");
-    $requeteEmail->execute([$reponseId]);
+    $requeteEmail->execute(['reponse_id' => $reponseId, 'company_id' => $company_id]);
     $emailData = $requeteEmail->fetch(PDO::FETCH_ASSOC);
 
     if ($emailData) {
@@ -95,8 +131,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Réponses Suggérée</title>
+    <title>Réponses Suggérées</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0HXKBBMW06"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-0HXKBBMW06');
+    </script>
+
 </head>
 <body class="font-sans bg-gray-50">
 <nav class="bg-white shadow-md">
@@ -113,7 +160,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
 </nav>
 
 <div class="flex h-screen">
-    <!-- Colonne latérale pour la liste des mails -->
     <div class="w-1/4 bg-gray-100 p-4 overflow-y-auto">
         <h2 class="text-xl font-bold mb-4">Liste des Mails</h2>
         <?php if (!empty($reponses)): ?>
@@ -132,7 +178,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
         <?php endif; ?>
     </div>
 
-    <!-- Colonne principale pour les détails -->
     <div class="flex-1 p-8 overflow-y-auto">
         <?php if ($reponseDetails): ?>
             <h2 class="text-2xl font-bold mb-4">Détails de la Réponse</h2>
@@ -144,14 +189,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['envoyer'])) {
                 <p><strong>Message Original :</strong></p>
                 <pre class="bg-gray-100 p-3 rounded-lg"><?= htmlspecialchars($reponseDetails['original_message']) ?></pre>
                 <p><strong>Réponse Générée :</strong></p>
-                <form method="POST" action="">
+                <form method="POST">
                     <textarea name="reply_message" class="w-full p-3 border border-gray-300 rounded-lg mb-4"><?= htmlspecialchars($reponseDetails['reply_message']) ?></textarea>
                     <input type="hidden" name="reponse_id" value="<?= $reponseDetails['id'] ?>">
-                    <button type="submit" name="envoyer" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">Envoyer la Réponse</button>
+                    <button type="submit" name="envoyer" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600">Envoyer</button>
                 </form>
             </div>
         <?php else: ?>
-            <p class="text-gray-600">Sélectionnez un mail pour voir les détails.</p>
+            <p class="text-gray-600">Sélectionnez un mail.</p>
         <?php endif; ?>
     </div>
 </div>

@@ -32,14 +32,17 @@ $company_id = $user['company_id']; // ID de l'entreprise associée
 
 // Récupération des e-mails liés à cette entreprise
 $requeteEmails = $connexion->prepare("
-    SELECT DISTINCT emails.id, emails.email_address, users.full_name, 
+    SELECT emails.id, emails.email_address, 
+           MAX(users.full_name) AS full_name, 
            IF(email_accounts.id IS NULL, 0, 1) AS has_imap_config
     FROM emails 
     JOIN users ON emails.company_id = users.company_id
     LEFT JOIN email_accounts ON emails.email_address = email_accounts.email_address
     WHERE emails.company_id = ?
+    GROUP BY emails.email_address
 ");
 $requeteEmails->execute([$company_id]);
+
 
 $donnees = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
 ?>
@@ -53,6 +56,17 @@ $donnees = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Icônes Font Awesome pour les indicateurs -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0HXKBBMW06"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-0HXKBBMW06');
+    </script>
+
 </head>
 <body class="bg-gray-100">
 
@@ -61,11 +75,11 @@ $donnees = $requeteEmails->fetchAll(PDO::FETCH_ASSOC);
     <div class="max-w-screen-xl mx-auto p-4 flex justify-between items-center">
         <a href="/" class="text-xl font-semibold text-blue-600">Mon Application</a>
         <ul class="flex space-x-6 text-gray-600">
-            <li><a href="/index.php">Dashboard</a></li>
+            <li><a href="/index.php" >Dashboard</a></li>
             <li><a href="/boitemail/index.php" class="text-blue-600">Email</a></li>
             <li><a href="/prompt/index.php">Prompt</a></li>
+            <li><a href="/gestionenvoie/afficheetenvoie.php" >Envoie Mail</a></li>
             <li><a href="/activité/index.php">Activité</a></li>
-            <li><a href="#">Contact</a></li>
         </ul>
     </div>
 </nav>

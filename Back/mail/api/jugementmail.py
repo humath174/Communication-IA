@@ -5,7 +5,6 @@ import os
 
 # Configuration de l'API OpenAI
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
 # Configuration de la base de données
 DB_CONFIG = {
     "host": "192.168.1.200",

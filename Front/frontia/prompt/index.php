@@ -20,21 +20,21 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Récupération du company_id de l'utilisateur
-$requeteUser = $connexion->prepare("SELECT company_id FROM users WHERE id = ?");
-$requeteUser->execute([$_SESSION['user_id']]);
-$user = $requeteUser->fetch(PDO::FETCH_ASSOC);
+$requeteCompany = $connexion->prepare("SELECT company_id FROM users WHERE id = ?");
+$requeteCompany->execute([$_SESSION['user_id']]);
+$company = $requeteCompany->fetch(PDO::FETCH_ASSOC);
 
-if (!$user) {
-    die("Utilisateur non trouvé.");
+if (!$company) {
+    die("Erreur : Impossible de récupérer l'entreprise.");
 }
 
-$company_id = $user['company_id']; // ID de l'entreprise associée
+$company_id = $company['company_id'];
 
-// Récupération des prompts liés à cette entreprise (avec le company_id)
+// Récupération des prompts liés à cette entreprise
 $requetePrompts = $connexion->prepare("
-    SELECT Prompt_Email.id, Prompt_Email.email, Prompt_Email.prompt 
-    FROM Prompt_Email
-    WHERE Prompt_Email.company_id = ?
+    SELECT id, email, prompt 
+    FROM Prompt_Email 
+    WHERE company_id = ?
 ");
 $requetePrompts->execute([$company_id]);
 $prompts = $requetePrompts->fetchAll(PDO::FETCH_ASSOC);
@@ -42,12 +42,22 @@ $prompts = $requetePrompts->fetchAll(PDO::FETCH_ASSOC);
 
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Prompts</title>
     <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-0HXKBBMW06"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-0HXKBBMW06');
+    </script>
+
 </head>
 
 <body class="bg-gray-100">
@@ -97,8 +107,11 @@ $prompts = $requetePrompts->fetchAll(PDO::FETCH_ASSOC);
             <?php endforeach; ?>
             </tbody>
         </table>
+
+        <?php if (empty($prompts)): ?>
+            <p class="text-gray-600 text-center p-4">Aucun prompt trouvé pour cette entreprise.</p>
+        <?php endif; ?>
     </div>
 </div>
 </body>
-
 </html>
