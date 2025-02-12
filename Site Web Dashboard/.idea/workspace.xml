@@ -5,19 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="bd2e3d19-12b6-47d9-88fe-bb97843b82f1" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/frontia/account.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontia/deconnexion.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontia/entreprise/company.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontia/entreprise/config.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontia/entreprise/delete_user.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontia/entreprise/edit_user.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontia/entreprise/navbar.php" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/frontia/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontia/boitemail/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/frontia/boitemail/index.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontia/gestionenvoie/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/frontia/gestionenvoie/index.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontia/index.php" beforeDir="false" afterPath="$PROJECT_DIR$/frontia/index.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontia/navbar.php" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontia/login.php" beforeDir="false" afterPath="$PROJECT_DIR$/frontia/login.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -118,7 +107,7 @@
       <updated>1739302345089</updated>
       <workItem from="1739302346657" duration="3611000" />
       <workItem from="1739364053267" duration="3973000" />
-      <workItem from="1739369546547" duration="7755000" />
+      <workItem from="1739369546547" duration="8443000" />
     </task>
     <servers />
   </component>
