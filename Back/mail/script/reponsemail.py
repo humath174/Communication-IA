@@ -10,10 +10,10 @@ import os
 openai.api_key = os.getenv("OPENAI_API_KEY")
 # Configuration de la base de données
 DB_CONFIG = {
-    "host": "192.168.1.200",
-    "user": "grafana",
-    "password": "grafana",
-    "database": "botscommunication"
+    "host": os.getenv("DB_HOST"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME")
 }
 
 # Configuration de l'envoi d'email

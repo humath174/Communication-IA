@@ -2,15 +2,20 @@ import openai
 import mysql.connector
 import time  # Pour ajouter le délai entre les vérifications
 import os
+from dotenv import load_dotenv
+
+# Charger les variables d'environnement depuis .env
+load_dotenv()
 
 # Configuration de l'API OpenAI
 openai.api_key = os.getenv("OPENAI_API_KEY")
+
 # Configuration de la base de données
 DB_CONFIG = {
-    "host": "192.168.1.200",
-    "user": "grafana",
-    "password": "grafana",
-    "database": "botscommunication"
+    "host": os.getenv("DB_HOST"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_NAME")
 }
 
 
